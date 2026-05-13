@@ -1,0 +1,22 @@
+{
+  "name": "aws-ddb-app-state",
+  "version": "0.1.0",
+  "bin": {
+    "aws-ddb-app-state": "bin/aws-ddb-app-state.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "cdk": "cdk"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "aws-cdk": "2.1033.0",
+    "ts-node": "^10.9.2",
+    "typescript": "~5.9.3"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "2.215.0",
+    "constructs": "^10.0.0"
+  }
+}
