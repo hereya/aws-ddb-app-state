@@ -1,5 +1,5 @@
 name: hereya/aws-ddb-app-state
-version: 0.1.0
+version: 0.1.1
 description: "DynamoDB tables for non-auth application state — a public registrations table and an OAuth/MCP machinery table — provisioned separately from identity so the cognito package stays focused on auth."
 visibility: public
 iac: cdk

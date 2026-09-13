@@ -41,6 +41,30 @@ export class AwsDdbAppStateStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
+    // --- Durable posture, both tables (0.1.1) -------------------------------
+    //
+    // These tables hold what a project cannot regenerate: registrations,
+    // and — in single-table OAuth/MCP state — whatever domain rows a project
+    // keys alongside (organizations, negotiated offers, integration
+    // credentials). Until 0.1.1 they shipped with `removalPolicy: DESTROY`,
+    // no point-in-time recovery and no deletion protection: a stack
+    // deletion, a bad migration or a logical corruption erased them with no
+    // way back. Found on a production table holding ~12 000 items.
+    //
+    //   • PITR — continuous backups, restore to any second in the last 35 days.
+    //   • deletionProtection — the table refuses DeleteTable, from CFN or CLI.
+    //   • RETAIN — a stack deletion orphans the table instead of dropping it.
+    //
+    // None of the three replaces the table: an existing deployment picks
+    // them up as an in-place update. Cost is PITR's per-GB charge on tables
+    // that are megabytes. To tear a table down on purpose, flip deletion
+    // protection off first — that is the point.
+    const DURABLE = {
+      pointInTimeRecoverySpecification: { pointInTimeRecoveryEnabled: true },
+      deletionProtection: true,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+    } as const;
+
     // --- RegistrationsTable -----------------------------------------------
     //
     // PK is `email` directly. Public-form rows are point-looked-up by
@@ -54,7 +78,7 @@ export class AwsDdbAppStateStack extends cdk.Stack {
       partitionKey: { name: 'email', type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       encryption: dynamodb.TableEncryption.AWS_MANAGED,
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      ...DURABLE,
     });
 
     // --- OAuthStateTable --------------------------------------------------
@@ -82,7 +106,7 @@ export class AwsDdbAppStateStack extends cdk.Stack {
       partitionKey: { name: 'pk', type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       encryption: dynamodb.TableEncryption.AWS_MANAGED,
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      ...DURABLE,
       timeToLiveAttribute: 'ttl',
     });
 

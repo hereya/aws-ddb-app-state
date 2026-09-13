@@ -10,6 +10,8 @@ DynamoDB tables for non-auth application state. Separate from the `aws/cognito` 
 | `OAuthStateTable` | OAuth 2.1 / MCP machinery state. PK = `<KIND>#<id>` (`CLIENT`, `CODE`, `TOKEN`, `REFRESH`). DDB native TTL on `ttl` attribute. GSI `byUser-index` (PK userId, SK createdAt) for listing a user's active token connections. |
 | `iamPolicyForAppState` | Single inline-policy JSON granting the application Lambda read/write on both tables and their indexes. |
 
+Both tables are **durable by construction** (since 0.1.1): point-in-time recovery on, deletion protection on, `RemovalPolicy.RETAIN`. Deleting the stack orphans them rather than dropping them; to drop one on purpose, switch deletion protection off first.
+
 ## Outputs (consumed by the Lambda via hereya variable resolution)
 
 | Name | Description |
